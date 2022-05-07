@@ -14,7 +14,7 @@ const DEFAULT_OPTS: Opts = {
   className: 'fretboard-diagram',
   width: 200,
   height: 300,
-  startFret: 1,
+  startFret: 0,
   endFret: 4,
   showFretNums: false,
   stringNames: ['E', 'B', 'G', 'D', 'A', 'E'],
@@ -34,7 +34,7 @@ export function makeFretboardDiagram(userOpts: Partial<Opts>, defaultOpts = DEFA
   const state: FretboardState = {...opts, ...fretboardData(opts)};
 
   const {width, height, className, dots, label, showFretNums, onClick} = opts;
-  const elem = makeSvgElement(width, height, className);
+  const elem: SVGSVGElement = makeSvgElement(width, height, className);
 
   drawStrings(elem, state);
   drawFrets(elem, state);
@@ -187,12 +187,22 @@ function cursorPoint(elem: SVGSVGElement, event: MouseEvent): DOMPoint {
  * Find the closest FretCoord to the clicked point.
  */
 function closestFretCoord(elem: SVGSVGElement, state: FretboardState, event: MouseEvent): FretCoord {
-  const {xMargin, yMargin, stringMargin, fretHeight, stringCount} = state;
+  const {xMargin, yMargin, stringMargin, fretHeight, stringCount, startFret, endFret} = state;
   const point = cursorPoint(elem, event);
   const x = point.x - xMargin;
   const y = point.y - yMargin + (fretHeight / 2);
 
-  const string = Math.abs(Math.round(x / stringMargin) - stringCount);
-  const fret = Math.round(y / fretHeight);
+  let string = Math.abs(Math.round(x / stringMargin) - stringCount);
+  string = normalize(string, 1, stringCount);
+
+  let fret = Math.round(y / fretHeight);
+  fret = normalize(fret, startFret, endFret);
+
   return {string, fret};
+}
+
+function normalize(n: number, low: number, high: number): number {
+  if (n < low) n = low;
+  if (n > high) n = high;
+  return n;
 }
