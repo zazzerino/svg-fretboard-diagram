@@ -14,6 +14,9 @@ export interface Dot extends FretCoord {
   color?: string;
 }
 
+/**
+ * Function that will be called when the diagram is clicked.
+ */
 export type OnClick = (coord: FretCoord, elem: SVGSVGElement, state: FretboardState) => any;
 
 /**
@@ -39,7 +42,7 @@ export interface Opts {
 /**
  * Fretboard data that will be calculated from the given Opts.
  */
-export type FretboardData = {
+export interface FretboardData {
   xMargin: number;
   yMargin: number;
   neckWidth: number;

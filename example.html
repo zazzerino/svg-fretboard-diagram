@@ -33,19 +33,19 @@
     dots,
     showFretNums: true,
     label: 'Amin',
-    onClick: coord => console.log(`clicked on string: ${coord.string}, fret: ${coord.fret}`)
+    showHoverDot: true,
+    hoverDotColor: randomColor(),
+    onClick: coord => console.log(`clicked string: ${coord.string}, fret: ${coord.fret}`)
   };
 
   const diagram = makeFretboardDiagram(opts);
   diagram.style = "outline: 2px solid salmon";
-  console.log(diagram);
 
   const div = document.getElementById('Am-diagram');
   div.appendChild(diagram);
 
   const diagram2 = makeFretboardDiagram(opts);
   diagram2.style = "outline: 2px solid fuchsia";
-  console.log(diagram2);
 
   const div2 = document.getElementById("2nd-diagram");
   div2.appendChild(diagram2);

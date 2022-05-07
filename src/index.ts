@@ -8,7 +8,7 @@ import {
 import {makeCircle, makeLine, makeSvgElement, makeText} from "./svg";
 
 /**
- * Options for a 6-string guitar in standard tuning.
+ * Options for a 6-string guitar (standard tuning, first position).
  */
 const DEFAULT_OPTS: Opts = {
   className: 'fretboard-diagram',
@@ -27,14 +27,14 @@ const DEFAULT_OPTS: Opts = {
 
 /**
  * The main exported function.
- * Will return an svg element with a depiction of a fretboard described by the given userOpts.
+ * Returns an svg element with a depiction of a fretboard described by the given userOpts.
  */
-export function makeFretboardDiagram(userOpts: Partial<Opts>, defaultOpts = DEFAULT_OPTS): SVGSVGElement {
-  const opts: Opts = {...defaultOpts, ...userOpts}; // merge default and user opts
-  const state: FretboardState = {...opts, ...fretboardData(opts)}; // calculate data from the opts
+export function makeFretboardDiagram(userOpts: Partial<Opts>): SVGSVGElement {
+  const opts: Opts = {...DEFAULT_OPTS, ...userOpts}; // merge default and user opts
+  const state: FretboardState = {...opts, ...fretboardData(opts)};
 
   const {width, height, className, dots, label, onClick} = opts;
-  const elem: SVGSVGElement = makeSvgElement(width, height, className);
+  const elem = makeSvgElement(width, height, className);
 
   drawStrings(elem, state);
   drawFrets(elem, state);
@@ -44,13 +44,38 @@ export function makeFretboardDiagram(userOpts: Partial<Opts>, defaultOpts = DEFA
   if (dots.length) drawDots(elem, state, dots); // won't be called if dots.length is 0
 
   if (onClick) {
-    elem.onclick = (ev: MouseEvent) => {
-      const coord = closestFretCoord(elem, state, ev);
+    elem.onclick = (event: MouseEvent) => {
+      const coord = closestFretCoord(elem, state, event);
       onClick(coord, elem, state);
     }
   }
 
+  if (opts.showHoverDot) setupHoverListeners(elem, state);
+
   return elem;
+}
+
+function setupHoverListeners(elem: SVGSVGElement, state: FretboardState) {
+  let hoverDot: SVGCircleElement | null = null;
+  let prevCoord: FretCoord | null = null;
+
+  elem.onmousemove = (event: MouseEvent) => {
+    const coord = closestFretCoord(elem, state, event);
+    if (fretCoordEqual(coord, prevCoord)) return; // return if we're still closest to the same string/fret
+
+    prevCoord = coord;
+    const dot: Dot = {...coord, color: state.hoverDotColor};
+
+    if (hoverDot) hoverDot.remove(); // remove the previous one
+    hoverDot = makeDotElem(elem, state, dot);
+    hoverDot.setAttribute('pointer-events', 'none');
+
+    elem.appendChild(hoverDot);
+  }
+
+  elem.onmouseout = _ev => {
+    if (hoverDot) hoverDot.remove();
+  }
 }
 
 /**
@@ -62,19 +87,13 @@ function fretboardData(opts: Opts): FretboardData {
   const xMargin = width / 6;
   const yMarginOffset = label == '' ? 1 : 1.5;
   const yMargin = (height / 8) * yMarginOffset;
-
   const neckWidth = width - (xMargin * 2);
   const neckHeight = height - (yMargin * 2);
-
   const stringCount = stringNames.length;
   const stringMargin = neckWidth / (stringCount - 1);
-
-  const fretCountOffset = startFret == 0 ? 0 : 1;
-  const fretCount = (endFret - startFret) + fretCountOffset;
-
+  const fretCount = endFret - startFret;
   const fretHeight = neckHeight / fretCount;
   const fretNumOffset = neckWidth / 6;
-
   const dotRadius = fretHeight / 6;
 
   return {
@@ -99,6 +118,7 @@ function drawStrings(elem: SVGElement, state: FretboardState) {
     const y1 = yMargin;
     const y2 = yMargin + neckHeight;
     const line = makeLine(x, y1, x, y2);
+    line.setAttribute("pointer-events", "none");
     elem.appendChild(line);
   }
 }
@@ -111,6 +131,7 @@ function drawFrets(elem: SVGElement, state: FretboardState) {
     const x1 = xMargin;
     const x2 = width - xMargin;
     const line = makeLine(x1, y, x2, y);
+    line.setAttribute("pointer-events", "none");
     elem.appendChild(line);
   }
 }
@@ -120,6 +141,7 @@ function drawLabel(elem: SVGElement, state: FretboardState, label: string) {
   const x = width / 2;
   const y = yMargin - (yMargin / 2);
   const textElem = makeText(x, y, label);
+  textElem.setAttribute("pointer-events", "none");
   elem.appendChild(textElem);
 }
 
@@ -131,12 +153,15 @@ function drawFretNums(elem: SVGElement, state: FretboardState) {
     const point = fretCoordPoint({fret, string}, state);
     const x = point.x - fretNumOffset;
     const y = point.y + (fretHeight / 4);
+
     const textElem = makeText(x, y, fret.toString(), fontSize);
+    textElem.setAttribute("pointer-events", "none");
+
     elem.appendChild(textElem);
   }
 }
 
-function drawDot(elem: SVGElement, state: FretboardState, dot: Dot) {
+function makeDotElem(elem: SVGElement, state: FretboardState, dot: Dot): SVGCircleElement {
   const {dotColor, dotRadius} = state;
   const {x, y} = fretCoordPoint(dot, state);
 
@@ -146,15 +171,20 @@ function drawDot(elem: SVGElement, state: FretboardState, dot: Dot) {
   const cy = y + (radius / 2);
 
   const circle = makeCircle(x, cy, radius, color);
-  elem.appendChild(circle);
+  circle.setAttribute("pointer-events", "none");
+
+  return circle;
 }
 
 function drawDots(elem: SVGElement, state: FretboardState, dots: Dot[]) {
-  dots.forEach(dot => drawDot(elem, state, dot));
+  for (const dot of dots) {
+    const dotElem = makeDotElem(elem, state, dot);
+    elem.appendChild(dotElem);
+  }
 }
 
 /**
- * Takes a FretCoord and returns the Point relative to the top left of the parent svg container.
+ * Takes a FretCoord and returns the (x,y) point relative to the top left of the parent svg container.
  */
 function fretCoordPoint(fretCoord: FretCoord, state: FretboardState) {
   const {string, fret} = fretCoord;
@@ -184,7 +214,7 @@ function cursorPoint(elem: SVGSVGElement, event: MouseEvent): DOMPoint {
 }
 
 /**
- * Find the closest FretCoord to the clicked point.
+ * Find the closest FretCoord to the mouse event.
  */
 function closestFretCoord(elem: SVGSVGElement, state: FretboardState, event: MouseEvent): FretCoord {
   const {xMargin, yMargin, stringMargin, fretHeight, stringCount, startFret, endFret} = state;
@@ -209,4 +239,8 @@ function normalize(n: number, low: number, high: number): number {
   }
 
   return n;
+}
+
+function fretCoordEqual(c1: FretCoord | null, c2: FretCoord | null): boolean {
+  return (c1 != null) && (c2 != null) && c1.string === c2.string && c1.fret === c2.fret;
 }
