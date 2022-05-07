@@ -21,7 +21,7 @@ const DEFAULT_OPTS: Opts = {
   showStringNames: false,
   dots: [],
   dotColor: 'white',
-  drawDotOnHover: false,
+  showHoverDot: false,
   hoverDotColor: 'white',
 }
 
@@ -31,21 +31,21 @@ const DEFAULT_OPTS: Opts = {
  */
 export function makeFretboardDiagram(userOpts: Partial<Opts>, defaultOpts = DEFAULT_OPTS): SVGSVGElement {
   const opts: Opts = {...defaultOpts, ...userOpts}; // merge default and user opts
-  const state: FretboardState = {...opts, ...fretboardData(opts)};
+  const state: FretboardState = {...opts, ...fretboardData(opts)}; // calculate data from the opts
 
-  const {width, height, className, dots, label, showFretNums, onClick} = opts;
+  const {width, height, className, dots, label, onClick} = opts;
   const elem: SVGSVGElement = makeSvgElement(width, height, className);
 
   drawStrings(elem, state);
   drawFrets(elem, state);
 
-  if (showFretNums) drawFretNums(elem, state);
+  if (opts.showFretNums) drawFretNums(elem, state);
   if (label) drawLabel(elem, state, label);
   if (dots.length) drawDots(elem, state, dots); // won't be called if dots.length is 0
 
   if (onClick) {
-    elem.onclick = (event: MouseEvent) => {
-      const coord = closestFretCoord(elem, state, event);
+    elem.onclick = (ev: MouseEvent) => {
+      const coord = closestFretCoord(elem, state, ev);
       onClick(coord, elem, state);
     }
   }
@@ -192,17 +192,21 @@ function closestFretCoord(elem: SVGSVGElement, state: FretboardState, event: Mou
   const x = point.x - xMargin;
   const y = point.y - yMargin + (fretHeight / 2);
 
-  let string = Math.abs(Math.round(x / stringMargin) - stringCount);
-  string = normalize(string, 1, stringCount);
+  const column = Math.abs(Math.round(x / stringMargin) - stringCount);
+  const string = normalize(column, 1, stringCount);
 
-  let fret = Math.round(y / fretHeight);
-  fret = normalize(fret, startFret, endFret);
+  const row = Math.round(y / fretHeight);
+  const fret = normalize(row, startFret, endFret);
 
   return {string, fret};
 }
 
 function normalize(n: number, low: number, high: number): number {
-  if (n < low) n = low;
-  if (n > high) n = high;
+  if (n < low) {
+    n = low;
+  } else if (n > high) {
+    n = high;
+  }
+
   return n;
 }

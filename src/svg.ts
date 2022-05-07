@@ -8,10 +8,13 @@ const SVG_NS = 'http://www.w3.org/2000/svg';
  */
 export function makeSvgElement(width: number, height: number, className?: string): SVGSVGElement {
   const elem = document.createElementNS(SVG_NS, 'svg');
+
   elem.setAttribute('width', width.toString());
   elem.setAttribute('height', height.toString());
   elem.setAttribute('viewBox', `0 0 ${width} ${height}`);
+
   if (className) elem.classList.add(className);
+
   return elem;
 }
 
@@ -20,11 +23,13 @@ export function makeSvgElement(width: number, height: number, className?: string
  */
 export function makeLine(x1: number, y1: number, x2: number, y2: number, color = 'black'): SVGLineElement {
   const line = document.createElementNS(SVG_NS, 'line');
+
   line.setAttribute('x1', x1.toString());
   line.setAttribute('y1', y1.toString());
   line.setAttribute('x2', x2.toString());
   line.setAttribute('y2', y2.toString());
   line.setAttribute('stroke', color);
+
   return line;
 }
 
@@ -37,11 +42,13 @@ export function makeLine(x1: number, y1: number, x2: number, y2: number, color =
  */
 export function makeCircle(cx: number, cy: number, r: number, color = 'white'): SVGCircleElement {
   const circle = document.createElementNS(SVG_NS, 'circle');
+
   circle.setAttribute('cx', cx.toString());
   circle.setAttribute('cy', cy.toString());
   circle.setAttribute('r', r.toString());
   circle.setAttribute('stroke', 'black');
   circle.setAttribute('fill', color);
+
   return circle;
 }
 
