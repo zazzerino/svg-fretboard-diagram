@@ -1,18 +1,7 @@
-import {Point} from "./types";
-
 /**
  * The svg namespace. Needed to create svg elements.
  */
 const SVG_NS = 'http://www.w3.org/2000/svg';
-
-/**
- * Calculates the distance between two points. Credit to Euclid.
- */
-export function distanceBetween(pt1: Point, pt2: Point): number {
-  const x = pt2.x - pt1.x;
-  const y = pt2.y - pt1.y;
-  return Math.hypot(x, y);
-}
 
 /**
  * Create an svg element with the given width and height.

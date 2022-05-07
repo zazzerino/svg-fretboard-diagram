@@ -1,8 +1,3 @@
-export interface Point {
-  x: number;
-  y: number;
-}
-
 /**
  * A string and fret on the fretboard.
  */

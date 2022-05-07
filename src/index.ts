@@ -4,7 +4,6 @@ import {
   FretboardState,
   FretCoord,
   Opts,
-  Point,
 } from "./types";
 import {makeCircle, makeLine, makeSvgElement, makeText} from "./svg";
 
@@ -172,7 +171,7 @@ function fretCoordPoint(fretCoord: FretCoord, state: FretboardState) {
 /**
  * Returns the svg coordinate (x,y) of the `event`, i.e., the coordinate that was clicked.
  */
-function cursorPoint(elem: SVGSVGElement, event: MouseEvent): Point {
+function cursorPoint(elem: SVGSVGElement, event: MouseEvent): DOMPoint {
   const point = elem.createSVGPoint();
   point.x = event.clientX;
   point.y = event.clientY;
