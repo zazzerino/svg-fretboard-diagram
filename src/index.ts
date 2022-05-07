@@ -2,7 +2,7 @@ import {
   Dot,
   FretboardData,
   FretboardState,
-  FretCoord,
+  FretCoord, OnClick,
   Opts,
 } from "./types";
 import {makeCircle, makeLine, makeSvgElement, makeText} from "./svg";
@@ -42,40 +42,10 @@ export function makeFretboardDiagram(userOpts: Partial<Opts>): SVGSVGElement {
   if (opts.showFretNums) drawFretNums(elem, state);
   if (label) drawLabel(elem, state, label);
   if (dots.length) drawDots(elem, state, dots); // won't be called if dots.length is 0
-
-  if (onClick) {
-    elem.onclick = (event: MouseEvent) => {
-      const coord = closestFretCoord(elem, state, event);
-      onClick(coord, elem, state);
-    }
-  }
-
-  if (opts.showHoverDot) setupHoverListeners(elem, state);
+  if (onClick) addClickListener(elem, state, onClick);
+  if (opts.showHoverDot) addHoverListener(elem, state);
 
   return elem;
-}
-
-function setupHoverListeners(elem: SVGSVGElement, state: FretboardState) {
-  let hoverDot: SVGCircleElement | null = null;
-  let prevCoord: FretCoord | null = null;
-
-  elem.onmousemove = (event: MouseEvent) => {
-    const coord = closestFretCoord(elem, state, event);
-    if (fretCoordEqual(coord, prevCoord)) return; // return if we're still closest to the same string/fret
-
-    prevCoord = coord;
-    const dot: Dot = {...coord, color: state.hoverDotColor};
-
-    if (hoverDot) hoverDot.remove(); // remove the previous one
-    hoverDot = makeDotElem(elem, state, dot);
-    hoverDot.setAttribute('pointer-events', 'none');
-
-    elem.appendChild(hoverDot);
-  }
-
-  elem.onmouseout = _ev => {
-    if (hoverDot) hoverDot.remove();
-  }
 }
 
 /**
@@ -180,6 +150,36 @@ function drawDots(elem: SVGElement, state: FretboardState, dots: Dot[]) {
   for (const dot of dots) {
     const dotElem = makeDotElem(elem, state, dot);
     elem.appendChild(dotElem);
+  }
+}
+
+function addClickListener(elem: SVGSVGElement, state: FretboardState, onClick: OnClick) {
+  elem.onclick = (event: MouseEvent) => {
+    const coord = closestFretCoord(elem, state, event);
+    onClick(coord, elem, state);
+  }
+}
+
+function addHoverListener(elem: SVGSVGElement, state: FretboardState) {
+  let hoverDot: SVGCircleElement | null = null;
+  let prevCoord: FretCoord | null = null;
+
+  elem.onmousemove = (event: MouseEvent) => {
+    const coord = closestFretCoord(elem, state, event);
+    if (fretCoordEqual(coord, prevCoord)) return; // return if we're still closest to the same string/fret
+
+    prevCoord = coord;
+    const dot: Dot = {...coord, color: state.hoverDotColor};
+
+    if (hoverDot) hoverDot.remove(); // remove the previous one
+    hoverDot = makeDotElem(elem, state, dot);
+    hoverDot.setAttribute('pointer-events', 'none');
+
+    elem.appendChild(hoverDot);
+  }
+
+  elem.onmouseout = _ev => {
+    if (hoverDot) hoverDot.remove();
   }
 }
 
