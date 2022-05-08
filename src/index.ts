@@ -40,9 +40,13 @@ export function makeFretboardDiagram(userOpts: Partial<Opts>): SVGSVGElement {
   drawFrets(elem, state);
 
   if (opts.showFretNums) drawFretNums(elem, state);
+
   if (label) drawLabel(elem, state, label);
+
   if (dots.length) drawDots(elem, state, dots); // won't be called if dots.length is 0
+
   if (onClick) addClickListener(elem, state, onClick);
+
   if (opts.showHoverDot) addHoverListener(elem, state);
 
   return elem;
@@ -57,13 +61,17 @@ function fretboardData(opts: Opts): FretboardData {
   const xMargin = width / 6;
   const yMarginOffset = label == '' ? 1 : 1.5;
   const yMargin = (height / 8) * yMarginOffset;
+
   const neckWidth = width - (xMargin * 2);
   const neckHeight = height - (yMargin * 2);
+
   const stringCount = stringNames.length;
   const stringMargin = neckWidth / (stringCount - 1);
+
   const fretCount = endFret - startFret;
   const fretHeight = neckHeight / fretCount;
   const fretNumOffset = neckWidth / 6;
+
   const dotRadius = fretHeight / 6;
 
   return {
@@ -87,8 +95,10 @@ function drawStrings(elem: SVGElement, state: FretboardState) {
     const x = (i * stringMargin) + xMargin;
     const y1 = yMargin;
     const y2 = yMargin + neckHeight;
+
     const line = makeLine(x, y1, x, y2);
     line.setAttribute("pointer-events", "none");
+
     elem.appendChild(line);
   }
 }
@@ -100,8 +110,10 @@ function drawFrets(elem: SVGElement, state: FretboardState) {
     const y = (i * fretHeight) + yMargin;
     const x1 = xMargin;
     const x2 = width - xMargin;
+
     const line = makeLine(x1, y, x2, y);
     line.setAttribute("pointer-events", "none");
+
     elem.appendChild(line);
   }
 }
@@ -110,8 +122,10 @@ function drawLabel(elem: SVGElement, state: FretboardState, label: string) {
   const {width, yMargin} = state;
   const x = width / 2;
   const y = yMargin - (yMargin / 2);
+
   const textElem = makeText(x, y, label);
   textElem.setAttribute("pointer-events", "none");
+
   elem.appendChild(textElem);
 }
 
@@ -131,7 +145,7 @@ function drawFretNums(elem: SVGElement, state: FretboardState) {
   }
 }
 
-function makeDotElem(elem: SVGElement, state: FretboardState, dot: Dot): SVGCircleElement {
+function makeDotElem(state: FretboardState, dot: Dot): SVGCircleElement {
   const {dotColor, dotRadius} = state;
   const {x, y} = fretCoordPoint(dot, state);
 
@@ -148,7 +162,7 @@ function makeDotElem(elem: SVGElement, state: FretboardState, dot: Dot): SVGCirc
 
 function drawDots(elem: SVGElement, state: FretboardState, dots: Dot[]) {
   for (const dot of dots) {
-    const dotElem = makeDotElem(elem, state, dot);
+    const dotElem = makeDotElem(state, dot);
     elem.appendChild(dotElem);
   }
 }
@@ -172,7 +186,8 @@ function addHoverListener(elem: SVGSVGElement, state: FretboardState) {
     const dot: Dot = {...coord, color: state.hoverDotColor};
 
     if (hoverDot) hoverDot.remove(); // remove the previous one
-    hoverDot = makeDotElem(elem, state, dot);
+
+    hoverDot = makeDotElem(state, dot);
     hoverDot.setAttribute('pointer-events', 'none');
 
     elem.appendChild(hoverDot);
@@ -192,7 +207,7 @@ function fretCoordPoint(fretCoord: FretCoord, state: FretboardState) {
 
   const stringNum = Math.abs(string - stringCount);
   const x = (stringNum * stringMargin) + xMargin;
-  const yOffset = fret === 0 ? 0 : -fretHeight / 8;
+  const yOffset = fret === 0 ? 0 : -fretHeight / 8; // hmm
   const y = (fret * fretHeight) - (fretHeight / 2) + yMargin + yOffset;
 
   return {x, y};
